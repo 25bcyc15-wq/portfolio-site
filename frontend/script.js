@@ -6,7 +6,8 @@ document.getElementById("contactForm").addEventListener("submit", async function
   const message = document.getElementById("message").value;
 
   try {
-    const response = await fetch("http://localhost:5000/submit", {
+    // ✅ Updated to match backend route (/contact)
+    const response = await fetch("/api/contact", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, message })
@@ -16,7 +17,8 @@ document.getElementById("contactForm").addEventListener("submit", async function
       alert("Thank you! Your message has been submitted.");
       document.getElementById("contactForm").reset();
     } else {
-      alert("Oops! Something went wrong. Please try again.");
+      const errorData = await response.json();
+      alert("Oops! " + (errorData.message || "Something went wrong. Please try again."));
     }
   } catch (error) {
     alert("Error connecting to server.");
