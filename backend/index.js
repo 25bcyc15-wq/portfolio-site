@@ -15,6 +15,7 @@ const isProduction = process.env.NODE_ENV === 'production';
 console.log('Starting server...');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('Is Production:', isProduction);
+console.log('DATABASE_URL available:', !!process.env.DATABASE_URL);
 
 app.use(cors());
 app.use(express.json());
@@ -80,13 +81,24 @@ async function initTable() {
   }
 }
 
-// Initialize database connection (non-blocking)
+// Initialize database connection (non-blocking, non-crashing)
 if (process.env.DATABASE_URL && isProduction) {
   // Production: PostgreSQL
   console.log('Configuring PostgreSQL...');
+  console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'present' : 'MISSING');
+  
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
+  });
+
+  // Test connection in background but don't block startup
+  pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+      console.error('⚠ PostgreSQL connection test failed:', err.message);
+    } else {
+      console.log('✓ PostgreSQL connection successful');
+    }
   });
 
   db = {
@@ -111,12 +123,18 @@ if (process.env.DATABASE_URL && isProduction) {
       await pool.query('DELETE FROM contact_messages');
     }
   };
-  console.log('✓ PostgreSQL configured');
+  console.log('✓ PostgreSQL pool created');
 } else {
   // Development: SQLite
   console.log('Using SQLite (local development)');
   const dbPath = path.join(__dirname, 'messages.db');
-  const sqlite = new sqlite3.Database(dbPath);
+  const sqlite = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+      console.error('⚠ SQLite connection error:', err.message);
+    } else {
+      console.log('✓ SQLite database connected');
+    }
+  });
 
   db = {
     sqlite,
@@ -161,7 +179,9 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok',
-    environment: isProduction ? 'production' : 'development'
+    environment: isProduction ? 'production' : 'development',
+    database: process.env.DATABASE_URL ? 'PostgreSQL' : 'SQLite',
+    timestamp: new Date().toISOString()
   });
 });
 
