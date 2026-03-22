@@ -1,7 +1,13 @@
 // Fetch and display messages from the database
 async function loadMessages() {
   try {
-    const response = await fetch("/messages");
+    const response = await fetch("/messages", {
+      method: "GET",
+      headers: { "Content-Type": "application/json" }
+    });
+    
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    
     const messages = await response.json();
     const messagesList = document.getElementById("messages-list");
     

@@ -108,8 +108,17 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', database: db ? 'connected' : 'not initialized' });
+});
+
 // Contact form endpoint
 app.post('/contact', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ message: "Database not initialized" });
+  }
+  
   const { name, email, message } = req.body;
 
   if (!name || !email || !message) {
@@ -127,6 +136,10 @@ app.post('/contact', async (req, res) => {
 
 // Get all messages
 app.get('/messages', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ message: "Database not initialized" });
+  }
+  
   try {
     const messages = await db.getAll();
     res.json(messages || []);
@@ -138,6 +151,10 @@ app.get('/messages', async (req, res) => {
 
 // Delete all messages
 app.delete('/messages', async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ message: "Database not initialized" });
+  }
+  
   try {
     await db.deleteAll();
     res.json({ message: "All messages deleted successfully" });
