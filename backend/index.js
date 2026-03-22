@@ -29,40 +29,54 @@ let tableInitialized = false;
 async function initTable() {
   if (tableInitialized) return;
   
-  try {
-    if (process.env.DATABASE_URL && isProduction) {
-      // PostgreSQL
-      await db.query(`
-        CREATE TABLE IF NOT EXISTS contact_messages (
-          id SERIAL PRIMARY KEY,
-          name TEXT NOT NULL,
-          email TEXT NOT NULL,
-          message TEXT NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-    } else {
-      // SQLite
-      await new Promise((resolve, reject) => {
-        db.sqlite.run(`
+  let retries = 0;
+  const maxRetries = 3;
+  
+  while (retries < maxRetries) {
+    try {
+      if (process.env.DATABASE_URL && isProduction) {
+        // PostgreSQL
+        await db.query(`
           CREATE TABLE IF NOT EXISTS contact_messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             name TEXT NOT NULL,
             email TEXT NOT NULL,
             message TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
           )
-        `, (err) => {
-          if (err) reject(err);
-          else resolve();
+        `);
+      } else {
+        // SQLite
+        await new Promise((resolve, reject) => {
+          db.sqlite.run(`
+            CREATE TABLE IF NOT EXISTS contact_messages (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              email TEXT NOT NULL,
+              message TEXT NOT NULL,
+              created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+          `, (err) => {
+            if (err) reject(err);
+            else resolve();
+          });
         });
-      });
+      }
+      tableInitialized = true;
+      console.log('✓ Database table initialized on first use');
+      return;
+    } catch (err) {
+      retries++;
+      console.error(`Table initialization error (attempt ${retries}/${maxRetries}):`, err.message);
+      
+      if (retries < maxRetries) {
+        console.log('Retrying in 1 second...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } else {
+        console.error('Failed to initialize table after max retries');
+        throw err;
+      }
     }
-    tableInitialized = true;
-    console.log('✓ Database table initialized on first use');
-  } catch (err) {
-    console.error('Table initialization error:', err.message);
-    throw err;
   }
 }
 
@@ -163,7 +177,7 @@ app.post('/contact', async (req, res) => {
     await db.save(name, email, message);
     res.json({ message: "Message saved successfully" });
   } catch (err) {
-    console.error('Error saving message:', err.message);
+    console.error('Error saving message:', err);
     res.status(500).json({ message: "Error saving message: " + err.message });
   }
 });
@@ -174,8 +188,8 @@ app.get('/messages', async (req, res) => {
     const messages = await db.getAll();
     res.json(messages || []);
   } catch (err) {
-    console.error('Error fetching messages:', err.message);
-    res.status(500).json({ message: "Error fetching messages" });
+    console.error('Error fetching messages:', err);
+    res.status(500).json({ message: "Error fetching messages: " + err.message });
   }
 });
 
@@ -191,7 +205,7 @@ app.delete('/messages', async (req, res) => {
 });
 
 // Start server - non-blocking
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log('');
   console.log('╔════════════════════════════════════╗');
   console.log(`║  Server running on port ${PORT}      ║`);
