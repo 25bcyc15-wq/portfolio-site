@@ -85,20 +85,10 @@ async function initTable() {
 if (process.env.DATABASE_URL && isProduction) {
   // Production: PostgreSQL
   console.log('Configuring PostgreSQL...');
-  console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'present' : 'MISSING');
   
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: { rejectUnauthorized: false }
-  });
-
-  // Test connection in background but don't block startup
-  pool.query('SELECT NOW()', (err, res) => {
-    if (err) {
-      console.error('⚠ PostgreSQL connection test failed:', err.message);
-    } else {
-      console.log('✓ PostgreSQL connection successful');
-    }
   });
 
   db = {
@@ -128,13 +118,7 @@ if (process.env.DATABASE_URL && isProduction) {
   // Development: SQLite
   console.log('Using SQLite (local development)');
   const dbPath = path.join(__dirname, 'messages.db');
-  const sqlite = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      console.error('⚠ SQLite connection error:', err.message);
-    } else {
-      console.log('✓ SQLite database connected');
-    }
-  });
+  const sqlite = new sqlite3.Database(dbPath);
 
   db = {
     sqlite,
@@ -167,7 +151,7 @@ if (process.env.DATABASE_URL && isProduction) {
       });
     }
   };
-  console.log('✓ SQLite configured');
+  console.log('✓ SQLite ready');
 }
 
 // Root route
@@ -234,15 +218,9 @@ app.delete('/messages', async (req, res) => {
   }
 });
 
-// Start server - non-blocking
-app.listen(PORT, '0.0.0.0', () => {
-  console.log('');
-  console.log('╔════════════════════════════════════╗');
-  console.log(`║  Server running on port ${PORT}      ║`);
-  console.log('║  Frontend: http://localhost:5000   ║');
-  console.log('║  Database: Lazy initialization     ║');
-  console.log('╚════════════════════════════════════╝');
-  console.log('');
+// Start server - listen on PORT, use default host (0.0.0.0 is default)
+app.listen(PORT, () => {
+  console.log(`Server started on port ${PORT}`);
 });
 
 // Handle uncaught errors
