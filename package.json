@@ -2,8 +2,9 @@
   "type": "module",
   "name": "potfolio-site",
   "version": "1.0.0",
-  "description": "",
+  "description": "Portfolio website with contact form",
   "main": "script.js",
+  "homepage": "https://portfolio-site-1-sw21.onrender.com",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,6 +17,5 @@
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/25bcyc15-wq/portfolio-site/issues"
-  },
-  "homepage": "https://github.com/25bcyc15-wq/portfolio-site#readme"
+  }
 }
