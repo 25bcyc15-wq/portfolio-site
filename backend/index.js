@@ -12,10 +12,11 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === 'production';
 
-console.log('Starting server...');
-console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('=== BACKEND STARTUP ===');
+console.log('Port:', PORT);
+console.log('NODE_ENV:', process.env.NODE_ENV || 'undefined');
 console.log('Is Production:', isProduction);
-console.log('DATABASE_URL available:', !!process.env.DATABASE_URL);
+console.log('DATABASE_URL:', process.env.DATABASE_URL ? '✓ present' : '✗ missing');
 
 app.use(cors());
 app.use(express.json());
@@ -218,17 +219,23 @@ app.delete('/messages', async (req, res) => {
   }
 });
 
-// Start server - listen on PORT, use default host (0.0.0.0 is default)
-app.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+// Start server - listen with error handler
+const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✓ Server listening on port ${PORT}`);
 });
 
-// Handle uncaught errors
+// Handle server errors
+server.on('error', (err) => {
+  console.error('Server error:', err);
+  // Don't exit, try again
+});
+
+// Handle uncaught errors - don't exit
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Rejection:', err);
 });
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
-  process.exit(1);
+  // Don't exit on exception
 });
