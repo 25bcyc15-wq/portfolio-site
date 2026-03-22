@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// ✅ Your contact API
+// ✅ Database setup
 const dbPath = path.join(__dirname, 'messages.db');
 const db = new sqlite3.Database(dbPath);
 
@@ -31,10 +31,12 @@ db.run(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     email TEXT NOT NULL,
-    message TEXT NOT NULL
+    message TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `);
 
+// ✅ Contact form endpoint
 app.post('/contact', (req, res) => {
   const { name, email, message } = req.body;
 
