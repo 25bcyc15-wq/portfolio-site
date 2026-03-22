@@ -68,17 +68,19 @@ if (process.env.DATABASE_URL && isProduction) {
         return initializeDatabase();
       } else {
         console.error('Max retries reached. Database may not be available.');
+        // Don't throw - let server start anyway
         return false;
       }
     }
   }
   
-  // Start initialization
-  initializeDatabase();
+  // Start initialization in background
+  initializeDatabase().catch(err => {
+    console.error('Fatal database error:', err);
+  });
 
   db = {
     async save(name, email, message) {
-      if (!dbReady) throw new Error('Database not ready');
       try {
         await pool.query(
           'INSERT INTO contact_messages (name, email, message) VALUES ($1, $2, $3)',
@@ -90,7 +92,6 @@ if (process.env.DATABASE_URL && isProduction) {
       }
     },
     async getAll() {
-      if (!dbReady) throw new Error('Database not ready');
       try {
         const result = await pool.query('SELECT * FROM contact_messages ORDER BY id DESC');
         return result.rows;
@@ -100,7 +101,6 @@ if (process.env.DATABASE_URL && isProduction) {
       }
     },
     async deleteAll() {
-      if (!dbReady) throw new Error('Database not ready');
       try {
         await pool.query('DELETE FROM contact_messages');
       } catch (err) {
@@ -111,8 +111,8 @@ if (process.env.DATABASE_URL && isProduction) {
   };
   console.log('PostgreSQL configuration loaded');
 } else {
-  // Development: Use SQLite
-  console.log('Using SQLite database (local development)');
+  // Development: Use SQLite (also fallback for Render if PostgreSQL fails)
+  console.log('Using SQLite database');
   const dbPath = path.join(__dirname, 'messages.db');
   const sqlite = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -137,6 +137,7 @@ if (process.env.DATABASE_URL && isProduction) {
       console.error('SQLite table creation error:', err.message);
     } else {
       console.log('✓ SQLite table created/verified');
+      if (!dbReady) dbReady = true;
     }
   });
 
@@ -206,10 +207,6 @@ app.get('/health', (req, res) => {
 
 // Contact form endpoint
 app.post('/contact', async (req, res) => {
-  if (!db || !dbReady) {
-    return res.status(503).json({ message: "Database initializing, please try again in a moment" });
-  }
-  
   const { name, email, message } = req.body;
 
   if (!name || !email || !message) {
@@ -220,43 +217,35 @@ app.post('/contact', async (req, res) => {
     await db.save(name, email, message);
     res.json({ message: "Message saved successfully" });
   } catch (err) {
-    console.error('Error saving message:', err);
-    res.status(500).json({ message: "Error saving message" });
+    console.error('Error saving message:', err.message);
+    res.status(500).json({ message: "Error saving message: " + err.message });
   }
 });
 
 // Get all messages
 app.get('/messages', async (req, res) => {
-  if (!db || !dbReady) {
-    return res.status(503).json({ message: "Database initializing, please try again in a moment" });
-  }
-  
   try {
     const messages = await db.getAll();
     res.json(messages || []);
   } catch (err) {
-    console.error('Error fetching messages:', err);
+    console.error('Error fetching messages:', err.message);
     res.status(500).json({ message: "Error fetching messages" });
   }
 });
 
 // Delete all messages
 app.delete('/messages', async (req, res) => {
-  if (!db || !dbReady) {
-    return res.status(503).json({ message: "Database initializing, please try again in a moment" });
-  }
-  
   try {
     await db.deleteAll();
     res.json({ message: "All messages deleted successfully" });
   } catch (err) {
-    console.error('Error deleting messages:', err);
+    console.error('Error deleting messages:', err.message);
     res.status(500).json({ message: "Error deleting messages" });
   }
 });
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log('');
   console.log('╔════════════════════════════════════╗');
   console.log(`║  Server running on port ${PORT}      ║`);
@@ -264,4 +253,14 @@ app.listen(PORT, () => {
   console.log('║  Ready to accept requests          ║');
   console.log('╚════════════════════════════════════╝');
   console.log('');
+});
+
+// Handle uncaught errors
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Rejection:', err);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
 });
