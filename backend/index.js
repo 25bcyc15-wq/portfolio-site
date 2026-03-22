@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import pg from 'pg';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -9,6 +10,8 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const isProduction = process.env.NODE_ENV === 'production';
+const messagesFile = path.join(__dirname, 'messages.json');
 
 app.use(cors());
 app.use(express.json());
@@ -16,22 +19,80 @@ app.use(express.json());
 // ✅ Serve frontend folder
 app.use(express.static(path.join(__dirname, '../frontend')));
 
-// ✅ Database setup
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
+// ✅ Database abstraction
+let db;
 
-// Create table if it doesn't exist
-pool.query(`
-  CREATE TABLE IF NOT EXISTS contact_messages (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  )
-`).catch(err => console.error('Error creating table:', err));
+if (process.env.DATABASE_URL && isProduction) {
+  // Use PostgreSQL in production
+  const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+  });
+
+  pool.query(`
+    CREATE TABLE IF NOT EXISTS contact_messages (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `).catch(err => console.error('Error creating table:', err));
+
+  db = {
+    async save(name, email, message) {
+      await pool.query(
+        "INSERT INTO contact_messages (name, email, message) VALUES ($1, $2, $3)",
+        [name, email, message]
+      );
+    },
+    async getAll() {
+      const result = await pool.query("SELECT * FROM contact_messages ORDER BY id DESC");
+      return result.rows;
+    },
+    async deleteAll() {
+      await pool.query("DELETE FROM contact_messages");
+    }
+  };
+  console.log('Using PostgreSQL database');
+} else {
+  // Use JSON file locally
+  function loadMessages() {
+    try {
+      if (fs.existsSync(messagesFile)) {
+        return JSON.parse(fs.readFileSync(messagesFile, 'utf8'));
+      }
+    } catch (err) {
+      console.error('Error reading messages:', err);
+    }
+    return [];
+  }
+
+  function saveMessages(messages) {
+    fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2));
+  }
+
+  db = {
+    async save(name, email, message) {
+      const messages = loadMessages();
+      messages.push({
+        id: messages.length + 1,
+        name,
+        email,
+        message,
+        created_at: new Date().toISOString()
+      });
+      saveMessages(messages);
+    },
+    async getAll() {
+      return loadMessages();
+    },
+    async deleteAll() {
+      saveMessages([]);
+    }
+  };
+  console.log('Using JSON file database');
+}
 
 // ✅ Root route
 app.get('/', (req, res) => {
@@ -47,10 +108,7 @@ app.post('/contact', async (req, res) => {
   }
 
   try {
-    await pool.query(
-      "INSERT INTO contact_messages (name, email, message) VALUES ($1, $2, $3)",
-      [name, email, message]
-    );
+    await db.save(name, email, message);
     res.json({ message: "Message saved successfully" });
   } catch (err) {
     console.error('Error saving message:', err);
@@ -61,8 +119,8 @@ app.post('/contact', async (req, res) => {
 // ✅ Get all messages
 app.get('/messages', async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM contact_messages ORDER BY id DESC");
-    res.json(result.rows || []);
+    const messages = await db.getAll();
+    res.json(messages || []);
   } catch (err) {
     console.error('Error fetching messages:', err);
     res.status(500).json({ message: "Error fetching messages" });
@@ -72,7 +130,7 @@ app.get('/messages', async (req, res) => {
 // ✅ Delete all messages
 app.delete('/messages', async (req, res) => {
   try {
-    await pool.query("DELETE FROM contact_messages");
+    await db.deleteAll();
     res.json({ message: "All messages deleted successfully" });
   } catch (err) {
     console.error('Error deleting messages:', err);
