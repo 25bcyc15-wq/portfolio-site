@@ -1,7 +1,7 @@
 // Fetch and display messages from the database
 async function loadMessages() {
   try {
-    const response = await fetch("http://localhost:5000/messages");
+    const response = await fetch("/messages");
     const messages = await response.json();
     const messagesList = document.getElementById("messages-list");
     
@@ -29,7 +29,7 @@ async function clearHistory() {
   if (!confirmDelete) return;
   
   try {
-    const response = await fetch("http://localhost:5000/messages", {
+    const response = await fetch("/messages", {
       method: "DELETE"
     });
     
@@ -76,7 +76,7 @@ if (form) {
     submitButton.textContent = "Sending...";
 
     try {
-      const response = await fetch("http://localhost:5000/contact", {
+      const response = await fetch("/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, message })
