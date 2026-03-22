@@ -175,6 +175,16 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
+// Simple test endpoint
+app.get('/test', (req, res) => {
+  res.json({ 
+    message: 'Backend is working!',
+    timestamp: new Date().toISOString(),
+    NODE_ENV: process.env.NODE_ENV,
+    databaseURL: process.env.DATABASE_URL ? 'configured' : 'not configured'
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
