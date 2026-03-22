@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import sqlite3 from 'sqlite3';
+import pg from 'pg';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -16,64 +16,68 @@ app.use(express.json());
 // ✅ Serve frontend folder
 app.use(express.static(path.join(__dirname, '../frontend')));
 
+// ✅ Database setup
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+});
+
+// Create table if it doesn't exist
+pool.query(`
+  CREATE TABLE IF NOT EXISTS contact_messages (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`).catch(err => console.error('Error creating table:', err));
+
 // ✅ Root route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// ✅ Database setup
-const dbPath = path.join(__dirname, 'messages.db');
-const db = new sqlite3.Database(dbPath);
-
-// Create table if it doesn't exist
-db.run(`
-  CREATE TABLE IF NOT EXISTS contact_messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    message TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  )
-`);
-
 // ✅ Contact form endpoint
-app.post('/contact', (req, res) => {
+app.post('/contact', async (req, res) => {
   const { name, email, message } = req.body;
 
   if (!name || !email || !message) {
     return res.status(400).json({ message: "All fields required" });
   }
 
-  db.run(
-    "INSERT INTO contact_messages (name, email, message) VALUES (?, ?, ?)",
-    [name, email, message],
-    function (err) {
-      if (err) {
-        return res.status(500).json({ message: "Error saving message" });
-      }
-      res.json({ message: "Message saved successfully" });
-    }
-  );
+  try {
+    await pool.query(
+      "INSERT INTO contact_messages (name, email, message) VALUES ($1, $2, $3)",
+      [name, email, message]
+    );
+    res.json({ message: "Message saved successfully" });
+  } catch (err) {
+    console.error('Error saving message:', err);
+    res.status(500).json({ message: "Error saving message" });
+  }
 });
 
 // ✅ Get all messages
-app.get('/messages', (req, res) => {
-  db.all("SELECT * FROM contact_messages ORDER BY id DESC", [], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ message: "Error fetching messages" });
-    }
-    res.json(rows || []);
-  });
+app.get('/messages', async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM contact_messages ORDER BY id DESC");
+    res.json(result.rows || []);
+  } catch (err) {
+    console.error('Error fetching messages:', err);
+    res.status(500).json({ message: "Error fetching messages" });
+  }
 });
 
 // ✅ Delete all messages
-app.delete('/messages', (req, res) => {
-  db.run("DELETE FROM contact_messages", function (err) {
-    if (err) {
-      return res.status(500).json({ message: "Error deleting messages" });
-    }
+app.delete('/messages', async (req, res) => {
+  try {
+    await pool.query("DELETE FROM contact_messages");
     res.json({ message: "All messages deleted successfully" });
-  });
+  } catch (err) {
+    console.error('Error deleting messages:', err);
+    res.status(500).json({ message: "Error deleting messages" });
+  }
 });
 
 // ✅ Start server
