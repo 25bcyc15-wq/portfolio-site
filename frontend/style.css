@@ -121,6 +121,70 @@ form button:hover {
   background: #ff9800;
 }
 
+/* Messages Section */
+#messages {
+  background: #fff;
+  text-align: left;
+}
+
+.messages-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.messages-header h2 {
+  flex: 1;
+  margin: 0;
+}
+
+.clear-btn {
+  background: #e74c3c;
+  color: #fff;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: background 0.3s ease;
+  white-space: nowrap;
+  margin-left: 20px;
+}
+
+.clear-btn:hover {
+  background: #c0392b;
+}
+
+.message-card {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.message-card h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.message-card p {
+  margin: 8px 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.message-card strong {
+  color: #333;
+}
+
 /* Footer */
 footer {
   background: #333;
