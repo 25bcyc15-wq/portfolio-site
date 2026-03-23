@@ -2,71 +2,250 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>My Portfolio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arsha Ashok - Full Stack Developer</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <i class="fas fa-code"></i> Arsha
+      </div>
+      <ul class="nav-menu">
+        <li><a href="#home" class="nav-link">Home</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#skills" class="nav-link">Skills</a></li>
+        <li><a href="#projects" class="nav-link">Projects</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+      </ul>
+      <button class="theme-toggle">
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+  </nav>
 
-  <!-- Header -->
-  <header>
-    <h1>Welcome to My Portfolio</h1>
-    <nav>
-      <a href="#about">About</a>
-      <a href="#projects">Projects</a>
-      <a href="#contact">Contact</a>
-    </nav>
-  </header>
+  <!-- Hero Section -->
+  <section id="home" class="hero">
+    <div class="hero-container">
+      <div class="hero-image">
+        <div class="profile-glow">
+          <img src="https://via.placeholder.com/300x300/1e90ff/ffffff?text=Arsha+Ashok" alt="Arsha Ashok" class="profile-img">
+        </div>
+      </div>
+      <div class="hero-content">
+        <h1 class="hero-title">
+          Hello, I'm <span class="highlight">Arsha Ashok</span>
+        </h1>
+        <p class="hero-subtitle">And I'm a Full Stack Developer</p>
+        <p class="hero-description">
+          Passionate about building scalable applications with modern technologies. Specialized in C, Python, and SQL with expertise in both frontend and backend development.
+        </p>
+        <div class="hero-buttons">
+          <a href="#contact" class="btn btn-primary">Contact me</a>
+          <a href="#projects" class="btn btn-secondary">View Portfolio</a>
+        </div>
+        <div class="social-links">
+          <a href="#" class="social-icon"><i class="fab fa-github"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-linkedin"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+          <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats">
+    <div class="stats-container">
+      <div class="stat-card">
+        <h3 class="stat-number">10+</h3>
+        <p class="stat-label">Projects</p>
+      </div>
+      <div class="stat-card">
+        <h3 class="stat-number">30+</h3>
+        <p class="stat-label">Clients</p>
+      </div>
+      <div class="stat-card">
+        <h3 class="stat-number">5+</h3>
+        <p class="stat-label">Years</p>
+      </div>
+      <div class="stat-card">
+        <h3 class="stat-number">100+</h3>
+        <p class="stat-label">Reviews</p>
+      </div>
+    </div>
+  </section>
 
   <!-- About Section -->
-  <section id="about">
-    <h2>About Me</h2>
-    <p>Hello! I’m a passionate developer who loves building clean, modern web experiences.</p>
+  <section id="about" class="about">
+    <div class="container">
+      <h2 class="section-title">About Me</h2>
+      <div class="about-content">
+        <p>
+          I'm a dedicated full-stack developer with a passion for creating elegant solutions to complex problems. With expertise in multiple programming languages and frameworks, I bring ideas to life through clean, efficient code.
+        </p>
+        <p>
+          My journey in tech has been driven by curiosity and a commitment to excellence. I thrive in collaborative environments and love learning new technologies to stay ahead in this ever-evolving field.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Skills Section -->
+  <section id="skills" class="skills">
+    <div class="container">
+      <h2 class="section-title">My Skills</h2>
+      <div class="skills-grid">
+        <div class="skill-card">
+          <i class="fas fa-sync-alt"></i>
+          <h3>C Programming</h3>
+          <p>Low-level programming, data structures, and system-level applications</p>
+          <div class="skill-level">
+            <div class="skill-bar" style="width: 85%"></div>
+          </div>
+        </div>
+        <div class="skill-card">
+          <i class="fas fa-snake"></i>
+          <h3>Python</h3>
+          <p>Backend development, automation, analytics, and machine learning</p>
+          <div class="skill-level">
+            <div class="skill-bar" style="width: 90%"></div>
+          </div>
+        </div>
+        <div class="skill-card">
+          <i class="fas fa-database"></i>
+          <h3>SQL</h3>
+          <p>Database design, queries, and management systems</p>
+          <div class="skill-level">
+            <div class="skill-bar" style="width: 88%"></div>
+          </div>
+        </div>
+        <div class="skill-card">
+          <i class="fas fa-code"></i>
+          <h3>Web Development</h3>
+          <p>HTML, CSS, JavaScript - responsive and interactive interfaces</p>
+          <div class="skill-level">
+            <div class="skill-bar" style="width: 92%"></div>
+          </div>
+        </div>
+        <div class="skill-card">
+          <i class="fas fa-flask"></i>
+          <h3>Backend Frameworks</h3>
+          <p>Flask, Django, Express - RESTful APIs and microservices</p>
+          <div class="skill-level">
+            <div class="skill-bar" style="width: 85%"></div>
+          </div>
+        </div>
+        <div class="skill-card">
+          <i class="fas fa-tools"></i>
+          <h3>DevOps & Tools</h3>
+          <p>Git, Docker, CI/CD, and deployment automation</p>
+          <div class="skill-level">
+            <div class="skill-bar" style="width: 80%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <!-- Projects Section -->
-  <section id="projects">
-    <h2>My Projects</h2>
-    <div class="projects">
-      <div class="project-card">
-        <h3>Project One</h3>
-        <p>A cool web app with interactive features.</p>
-      </div>
-      <div class="project-card">
-        <h3>Project Two</h3>
-        <p>Responsive design and smooth animations.</p>
+  <section id="projects" class="projects">
+    <div class="container">
+      <h2 class="section-title">Featured Projects</h2>
+      <div class="projects-grid">
+        <div class="project-card">
+          <div class="project-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)">
+            <i class="fas fa-laptop-code"></i>
+          </div>
+          <h3>Full Stack Web Application</h3>
+          <p>Built a complete web application with Python Flask backend and responsive frontend.</p>
+          <div class="project-tech">
+            <span class="tech-tag">Python</span>
+            <span class="tech-tag">Flask</span>
+            <span class="tech-tag">SQL</span>
+          </div>
+          <a href="#" class="project-link">View Project <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        <div class="project-card">
+          <div class="project-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%)">
+            <i class="fas fa-database"></i>
+          </div>
+          <h3>Database Management System</h3>
+          <p>Designed and implemented a scalable database system with complex queries and optimization.</p>
+          <div class="project-tech">
+            <span class="tech-tag">SQL</span>
+            <span class="tech-tag">Database Design</span>
+            <span class="tech-tag">Optimization</span>
+          </div>
+          <a href="#" class="project-link">View Project <i class="fas fa-arrow-right"></i></a>
+        </div>
+
+        <div class="project-card">
+          <div class="project-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)">
+            <i class="fas fa-cube"></i>
+          </div>
+          <h3>C Systems Programming</h3>
+          <p>Developed low-level systems applications with advanced data structures and algorithms.</p>
+          <div class="project-tech">
+            <span class="tech-tag">C</span>
+            <span class="tech-tag">Data Structures</span>
+            <span class="tech-tag">Algorithms</span>
+          </div>
+          <a href="#" class="project-link">View Project <i class="fas fa-arrow-right"></i></a>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- Contact Section -->
-  <section id="contact">
-    <h2>Contact Me</h2>
-    <form id="contact-form">
-      <label for="name">Name</label>
-      <input type="text" id="name" name="name" placeholder="Your Name" required>
-
-      <label for="email">Email</label>
-      <input type="email" id="email" name="email" placeholder="Your Email" required>
-
-      <label for="message">Message</label>
-      <textarea id="message" name="message" placeholder="Your Message" rows="5"></textarea>
-
-      <button type="submit">Submit</button>
-    </form>
+  <section id="contact" class="contact">
+    <div class="container">
+      <h2 class="section-title">Get In Touch</h2>
+      <form id="contact-form" class="contact-form">
+        <div class="form-group">
+          <input type="text" id="name" placeholder="Your Name" required>
+        </div>
+        <div class="form-group">
+          <input type="email" id="email" placeholder="Your Email" required>
+        </div>
+        <div class="form-group">
+          <textarea id="message" placeholder="Your Message" rows="6" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-submit">Send Message</button>
+      </form>
+      <div class="contact-info">
+        <p><strong>Email:</strong> arsha@example.com</p>
+        <p><strong>Location:</strong> Your City, Country</p>
+      </div>
+    </div>
   </section>
 
   <!-- Messages Display Section -->
-  <section id="messages">
-    <div class="messages-header">
-      <h2>Recent Messages</h2>
-      <button id="clear-history-btn" class="clear-btn">Clear History</button>
+  <section class="messages-section">
+    <div class="container">
+      <div class="messages-header">
+        <h3>Recent Messages</h3>
+        <button id="clear-history-btn" class="btn btn-secondary btn-small">Clear History</button>
+      </div>
+      <div id="messages-list" class="messages-container"></div>
     </div>
-    <div id="messages-list" class="messages-container"></div>
   </section>
 
   <!-- Footer -->
-  <footer>
-    <p>&copy; 2026 My Portfolio. All rights reserved.</p>
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 Arsha Ashok. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#projects">Projects</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
   </footer>
 
   <script src="script.js"></script>

@@ -12,20 +12,20 @@ async function loadMessages() {
     const messagesList = document.getElementById("messages-list");
     
     if (!messages || messages.length === 0) {
-      messagesList.innerHTML = "<p>No messages yet.</p>";
+      messagesList.innerHTML = "<p style='text-align: center; color: #b0b8c1;'>No messages yet.</p>";
       return;
     }
     
     messagesList.innerHTML = messages.map(msg => `
       <div class="message-card">
-        <h4>${msg.name}</h4>
-        <p><strong>Email:</strong> ${msg.email}</p>
-        <p><strong>Message:</strong> ${msg.message}</p>
+        <h4>${escapeHtml(msg.name)}</h4>
+        <p><strong>Email:</strong> ${escapeHtml(msg.email)}</p>
+        <p><strong>Message:</strong> ${escapeHtml(msg.message)}</p>
       </div>
     `).join("");
   } catch (error) {
     console.error("Error loading messages:", error);
-    document.getElementById("messages-list").innerHTML = "<p>Error loading messages.</p>";
+    document.getElementById("messages-list").innerHTML = "<p style='text-align: center; color: #b0b8c1;'>Error loading messages.</p>";
   }
 }
 
@@ -51,6 +51,18 @@ async function clearHistory() {
   }
 }
 
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return text.replace(/[&<>"']/g, m => map[m]);
+}
+
 // Load messages and setup event listeners when page loads
 window.addEventListener("DOMContentLoaded", function() {
   loadMessages();
@@ -58,7 +70,57 @@ window.addEventListener("DOMContentLoaded", function() {
   if (clearBtn) {
     clearBtn.addEventListener("click", clearHistory);
   }
+  
+  // Setup smooth scroll
+  setupSmoothScroll();
+  
+  // Setup animations on scroll
+  setupScrollAnimations();
 });
+
+// Smooth scroll for navigation
+function setupSmoothScroll() {
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      const href = this.getAttribute('href');
+      if (href !== '#') {
+        e.preventDefault();
+        const target = document.querySelector(href);
+        if (target) {
+          const offsetTop = target.offsetTop - 80;
+          window.scrollTo({
+            top: offsetTop,
+            behavior: 'smooth'
+          });
+        }
+      }
+    });
+  });
+}
+
+// Scroll animations
+function setupScrollAnimations() {
+  const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -100px 0px'
+  };
+
+  const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, observerOptions);
+
+  document.querySelectorAll('.skill-card, .project-card, .stat-card').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'all 0.6s ease';
+    observer.observe(el);
+  });
+}
 
 // Enhanced contact form handler with validation and user feedback
 const form = document.getElementById("contact-form");
@@ -76,8 +138,16 @@ if (form) {
       return;
     }
 
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+
     // Show loading feedback
     const submitButton = form.querySelector("button[type='submit']");
+    const originalText = submitButton.textContent;
     submitButton.disabled = true;
     submitButton.textContent = "Sending...";
 
@@ -98,9 +168,46 @@ if (form) {
       }
     } catch (error) {
       alert("Error connecting to server.");
+      console.error("Error:", error);
     } finally {
       submitButton.disabled = false;
-      submitButton.textContent = "Send Message";
+      submitButton.textContent = originalText;
     }
   });
 }
+
+// Theme toggle
+const themeToggle = document.querySelector('.theme-toggle');
+if (themeToggle) {
+  themeToggle.addEventListener('click', function() {
+    document.body.classList.toggle('light-theme');
+    localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+  });
+
+  // Load saved theme
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-theme');
+  }
+}
+
+// Active nav link on scroll
+window.addEventListener('scroll', function() {
+  const sections = document.querySelectorAll('section');
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  let current = '';
+  sections.forEach(section => {
+    const sectionTop = section.offsetTop;
+    const sectionHeight = section.clientHeight;
+    if (pageYOffset >= sectionTop - 200) {
+      current = section.getAttribute('id');
+    }
+  });
+
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('href').slice(1) === current) {
+      link.classList.add('active');
+    }
+  });
+});
