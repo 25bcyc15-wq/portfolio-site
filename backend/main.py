@@ -41,47 +41,65 @@ app.add_middleware(
 
 # Initialize Supabase
 try:
-    init_supabase()
-    print("✅ Supabase initialized successfully")
+    supabase = init_supabase()
+    if supabase:
+        print("✅ Supabase initialized successfully")
+    else:
+        print("⚠️  Supabase not configured - set SUPABASE_URL and SUPABASE_KEY environment variables")
 except Exception as e:
     print(f"⚠️  Supabase initialization warning: {e}")
 
-# Include routes
+# Include routes FIRST - before catch-all
 app.include_router(contact_routes.router, prefix="/api", tags=["contact"])
 
-# Serve static files from frontend
+# Health check endpoint (before catch-all)
+@app.get("/health")
+async def health_check():
+    supabase = init_supabase()
+    return {
+        "status": "ok",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "database": "supabase",
+        "supabase_configured": supabase is not None
+    }
+
+# Info endpoint for debugging
+@app.get("/info")
+async def info():
+    return {
+        "app": "Arsha Ashok - Portfolio API",
+        "version": "1.0.0",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "supabase_url": os.getenv("SUPABASE_URL", "NOT SET"),
+        "supabase_key_set": bool(os.getenv("SUPABASE_KEY")),
+        "cors_origins": origins
+    }
+
+# Serve static files from frontend AFTER API routes
 frontend_path = Path(__file__).parent.parent / "frontend"
 if frontend_path.exists():
     app.mount("/static", StaticFiles(directory=str(frontend_path)), name="static")
 
-# Serve index.html for SPA routing
+# Serve index.html for SPA routing (specific routes first)
 @app.get("/")
 async def serve_index():
     index_path = frontend_path / "index.html"
     if index_path.exists():
-        return FileResponse(str(index_path))
+        return FileResponse(str(index_path), media_type="text/html")
     return {"message": "Portfolio API - Frontend not found"}
 
-# Health check
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "ok",
-        "environment": os.getenv("ENVIRONMENT", "development"),
-        "database": "supabase"
-    }
-
-# Catch-all for SPA routing
-@app.get("/{full_path:path}")
+# Catch-all for SPA routing (MUST be last)
+@app.api_route("/{full_path:path}", methods=["GET"])
 async def catch_all(full_path: str):
-    # If it's an API route, let it fail with 404
-    if full_path.startswith("api/"):
-        raise HTTPException(status_code=404, detail="Endpoint not found")
+    # Serve static files if they exist
+    file_path = frontend_path / full_path
+    if file_path.exists() and file_path.is_file():
+        return FileResponse(str(file_path))
     
     # Otherwise serve index.html for SPA routing
     index_path = frontend_path / "index.html"
     if index_path.exists():
-        return FileResponse(str(index_path))
+        return FileResponse(str(index_path), media_type="text/html")
     raise HTTPException(status_code=404, detail="Not found")
 
 if __name__ == "__main__":

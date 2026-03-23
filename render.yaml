@@ -11,8 +11,7 @@ services:
         value: production
       - key: PORT
         value: "8000"
-      # Add your Supabase credentials here in Render dashboard
-      # - key: SUPABASE_URL
-      #   value: your_supabase_url
-      # - key: SUPABASE_KEY
-      #   value: your_supabase_anon_key
+      - key: SUPABASE_URL
+        value: https://tzbjqifwrsocyeolmeal.supabase.co
+      - key: SUPABASE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR6YmpxaWZ3cnNvY3llb2xtZWFsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyMzA1MTcsImV4cCI6MjA4OTgwNjUxN30.Hk1C7AVZCaR8JOE3L0PgLR64xHoI-sGyarPDwdARav4
