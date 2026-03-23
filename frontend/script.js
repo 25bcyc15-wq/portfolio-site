@@ -141,65 +141,6 @@ function setupScrollAnimations() {
   });
 }
 
-// Enhanced contact form handler with validation and user feedback
-const form = document.getElementById("contact-form");
-if (form) {
-  form.addEventListener("submit", async function(e) {
-    e.preventDefault();
-
-    const name = document.getElementById("name").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const message = document.getElementById("message").value.trim();
-
-    // Simple validation
-    if (!name || !email || !message) {
-      alert("Please fill in all fields.");
-      return;
-    }
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      alert("Please enter a valid email address.");
-      return;
-    }
-
-    // Show loading feedback
-    const submitButton = form.querySelector("button[type='submit']");
-    const originalText = submitButton.textContent;
-    submitButton.disabled = true;
-    submitButton.textContent = "Sending...";
-
-    try {
-      const url = `${API_BASE_URL}${CONTACT_ENDPOINT}`;
-      console.log(\"Submitting to:\", url);
-      
-      const response = await fetch(url, {
-        method: \"POST\",
-        headers: { \"Content-Type\": \"application/json\" },
-        body: JSON.stringify({ name, email, message })
-      });
-
-      const result = await response.json();
-      console.log(\"Submit response:\", response.status, result);
-      
-      if (response.ok && result.success) {
-        alert(\"✅ Thank you! Your message has been submitted.\");
-        form.reset();
-        setTimeout(() => loadMessages(), 500);
-      } else {
-        alert(\"❌ \" + (result.message || result.detail || \"Failed to submit.\"));
-      }
-    } catch (error) {
-      alert(\"❌ Error: \" + error.message);
-      console.error("Error:", error);
-    } finally {
-      submitButton.disabled = false;
-      submitButton.textContent = originalText;
-    }
-  });
-}
-
 // Theme toggle
 const themeToggle = document.querySelector('.theme-toggle');
 if (themeToggle) {
