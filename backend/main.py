@@ -94,12 +94,22 @@ async def catch_all(full_path: str):
     # Serve static files if they exist
     file_path = frontend_path / full_path
     if file_path.exists() and file_path.is_file():
+        # Add cache-busting headers for images
+        if str(file_path).endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            return FileResponse(
+                str(file_path),
+                headers={"Cache-Control": "public, max-age=3600"}
+            )
         return FileResponse(str(file_path))
     
     # Otherwise serve index.html for SPA routing
     index_path = frontend_path / "index.html"
     if index_path.exists():
-        return FileResponse(str(index_path), media_type="text/html")
+        return FileResponse(
+            str(index_path), 
+            media_type="text/html",
+            headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
+        )
     raise HTTPException(status_code=404, detail="Not found")
 
 if __name__ == "__main__":
