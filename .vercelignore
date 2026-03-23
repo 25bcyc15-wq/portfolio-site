@@ -1,0 +1,15 @@
+.git
+.gitignore
+README.md
+BACKEND.md
+QUICKSTART.md
+DEPLOYMENT.md
+README_PRODUCTION.md
+.env
+.env.local
+.env.*.local
+node_modules
+npm-debug.log
+.DS_Store
+backend/
+render.yaml
