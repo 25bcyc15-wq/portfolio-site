@@ -1,13 +1,13 @@
 services:
   - type: web
     name: portfolio-site
-    runtime: node
+    runtime: python
     region: oregon
     plan: free
-    buildCommand: npm install --prefix backend
-    startCommand: npm start --prefix backend
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn --chdir backend app:app --bind 0.0.0.0:$PORT
     envVars:
-      - key: NODE_ENV
+      - key: FLASK_ENV
         value: production
       - key: DATABASE_URL
         fromDatabase:
