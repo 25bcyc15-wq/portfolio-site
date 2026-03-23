@@ -6,19 +6,28 @@ const MESSAGES_ENDPOINT = '/api/messages';
 // Fetch and display messages from the database
 async function loadMessages() {
   try {
-    const response = await fetch(`${API_BASE_URL}${MESSAGES_ENDPOINT}`, {
+    const url = `${API_BASE_URL}${MESSAGES_ENDPOINT}`;
+    console.log("Loading messages from:", url);
+    
+    const response = await fetch(url, {
       method: "GET",
       headers: { "Content-Type": "application/json" }
     });
     
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    console.log("Response status:", response.status);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
     
     const result = await response.json();
-    const messages = result.data || [];
+    console.log("Messages loaded:", result);
+    
+    const messages = result.data || result || [];
     const messagesList = document.getElementById("messages-list");
     
     if (!messages || messages.length === 0) {
-      messagesList.innerHTML = "<p style='text-align: center; color: #b0b8c1;'>No messages yet.</p>";
+      messagesList.innerHTML = "<p style='text-align: center; color: #b0b8c1;'>No messages yet. Submit one using the contact form above!</p>";
       return;
     }
     
@@ -32,7 +41,8 @@ async function loadMessages() {
     `).join("");
   } catch (error) {
     console.error("Error loading messages:", error);
-    document.getElementById("messages-list").innerHTML = "<p style='text-align: center; color: #b0b8c1;'>Error loading messages.</p>";
+    const messagesList = document.getElementById("messages-list");
+    messagesList.innerHTML = "<p style='text-align: center; color: #b0b8c1;'>📧 Messages feature unavailable. Check browser console for details.</p>";
   }
 }
 
@@ -161,23 +171,27 @@ if (form) {
     submitButton.textContent = "Sending...";
 
     try {
-      const response = await fetch(`${API_BASE_URL}${CONTACT_ENDPOINT}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const url = `${API_BASE_URL}${CONTACT_ENDPOINT}`;
+      console.log(\"Submitting to:\", url);
+      
+      const response = await fetch(url, {
+        method: \"POST\",
+        headers: { \"Content-Type\": \"application/json\" },
         body: JSON.stringify({ name, email, message })
       });
 
       const result = await response.json();
+      console.log(\"Submit response:\", response.status, result);
       
       if (response.ok && result.success) {
-        alert("Thank you! Your message has been submitted.");
+        alert(\"✅ Thank you! Your message has been submitted.\");
         form.reset();
-        loadMessages(); // Refresh messages list
+        setTimeout(() => loadMessages(), 500);
       } else {
-        alert(result.message || result.detail || "Something went wrong. Please try again.");
+        alert(\"❌ \" + (result.message || result.detail || \"Failed to submit.\"));
       }
     } catch (error) {
-      alert("Error connecting to server.");
+      alert(\"❌ Error: \" + error.message);
       console.error("Error:", error);
     } finally {
       submitButton.disabled = false;
