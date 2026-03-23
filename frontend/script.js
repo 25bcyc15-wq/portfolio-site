@@ -1,14 +1,20 @@
+// Configuration
+const API_BASE_URL = window.location.origin;
+const CONTACT_ENDPOINT = '/api/contact';
+const MESSAGES_ENDPOINT = '/api/messages';
+
 // Fetch and display messages from the database
 async function loadMessages() {
   try {
-    const response = await fetch("/messages", {
+    const response = await fetch(`${API_BASE_URL}${MESSAGES_ENDPOINT}`, {
       method: "GET",
       headers: { "Content-Type": "application/json" }
     });
     
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     
-    const messages = await response.json();
+    const result = await response.json();
+    const messages = result.data || [];
     const messagesList = document.getElementById("messages-list");
     
     if (!messages || messages.length === 0) {
@@ -21,6 +27,7 @@ async function loadMessages() {
         <h4>${escapeHtml(msg.name)}</h4>
         <p><strong>Email:</strong> ${escapeHtml(msg.email)}</p>
         <p><strong>Message:</strong> ${escapeHtml(msg.message)}</p>
+        <p style="font-size: 0.85rem; color: #888; margin-top: 0.5rem;">${new Date(msg.created_at).toLocaleString()}</p>
       </div>
     `).join("");
   } catch (error) {
@@ -35,15 +42,17 @@ async function clearHistory() {
   if (!confirmDelete) return;
   
   try {
-    const response = await fetch("/messages", {
-      method: "DELETE"
+    const response = await fetch(`${API_BASE_URL}${MESSAGES_ENDPOINT}`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" }
     });
     
     if (response.ok) {
       alert("All messages have been deleted successfully.");
       loadMessages(); // Refresh the messages list
     } else {
-      alert("Failed to delete messages.");
+      const error = await response.json();
+      alert(error.detail || "Failed to delete messages.");
     }
   } catch (error) {
     console.error("Error clearing messages:", error);
@@ -152,19 +161,20 @@ if (form) {
     submitButton.textContent = "Sending...";
 
     try {
-      const response = await fetch("/contact", {
+      const response = await fetch(`${API_BASE_URL}${CONTACT_ENDPOINT}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, message })
       });
 
       const result = await response.json();
-      if (response.ok) {
+      
+      if (response.ok && result.success) {
         alert("Thank you! Your message has been submitted.");
         form.reset();
         loadMessages(); // Refresh messages list
       } else {
-        alert(result.message || "Something went wrong. Please try again.");
+        alert(result.message || result.detail || "Something went wrong. Please try again.");
       }
     } catch (error) {
       alert("Error connecting to server.");

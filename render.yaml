@@ -1,21 +1,18 @@
 services:
   - type: web
-    name: portfolio-site
+    name: arsha-portfolio
     runtime: python
     region: oregon
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: gunicorn --chdir backend app:app --bind 0.0.0.0:$PORT
+    buildCommand: pip install -r backend/requirements_fastapi.txt
+    startCommand: cd backend && python -m uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: FLASK_ENV
+      - key: ENVIRONMENT
         value: production
-      - key: DATABASE_URL
-        fromDatabase:
-          name: portfolio-db
-          property: connectionString
-
-databases:
-  - name: portfolio-db
-    plan: free
-    region: oregon
-    postgresVersion: "15"
+      - key: PORT
+        value: "8000"
+      # Add your Supabase credentials here in Render dashboard
+      # - key: SUPABASE_URL
+      #   value: your_supabase_url
+      # - key: SUPABASE_KEY
+      #   value: your_supabase_anon_key
