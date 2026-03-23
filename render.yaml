@@ -2,6 +2,7 @@ services:
   - type: web
     name: arsha-portfolio
     runtime: python
+    pythonVersion: 3.11
     region: oregon
     plan: free
     buildCommand: pip install -r backend/requirements_fastapi.txt
