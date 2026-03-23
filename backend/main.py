@@ -45,86 +45,66 @@ try:
     if supabase:
         print("✅ Supabase initialized successfully")
     else:
-        print("⚠️  Supabase not configured - set SUPABASE_URL and SUPABASE_KEY environment variables")
+        print("⚠️  Supabase not configured")
 except Exception as e:
-    print(f"⚠️  Supabase initialization warning: {e}")
+    print(f"⚠️  Supabase warning: {e}")
 
-# Include routes FIRST - before catch-all
+# API ROUTES MUST BE FIRST
+print("📌 Registering API router at /api...")
 app.include_router(contact_routes.router, prefix="/api", tags=["contact"])
 
-# Health check endpoint (before catch-all)
+# Health check
 @app.get("/health")
 async def health_check():
-    supabase = init_supabase()
     return {
         "status": "ok",
         "environment": os.getenv("ENVIRONMENT", "development"),
-        "database": "supabase",
-        "supabase_configured": supabase is not None
+        "database": "supabase"
     }
 
-# Info endpoint for debugging
+# Info
 @app.get("/info")
 async def info():
     return {
         "app": "Arsha Ashok - Portfolio API",
         "version": "1.0.0",
         "environment": os.getenv("ENVIRONMENT", "development"),
-        "supabase_url": os.getenv("SUPABASE_URL", "NOT SET"),
-        "supabase_key_set": bool(os.getenv("SUPABASE_KEY")),
-        "cors_origins": origins
+        "api_endpoints": ["/api/contact", "/api/messages"]
     }
 
-# Serve static files from frontend AFTER API routes
+# Frontend path
 frontend_path = Path(__file__).parent.parent / "frontend"
-if frontend_path.exists():
-    app.mount("/static", StaticFiles(directory=str(frontend_path)), name="static")
 
-# Serve index.html for SPA routing (specific routes first)
+# Root
 @app.get("/")
-async def serve_index():
+async def serve_root():
     index_path = frontend_path / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path), media_type="text/html")
-    return {"message": "Portfolio API - Frontend not found"}
+    return {"message": "Frontend not found"}
 
-# Catch-all for SPA routing (MUST be last)
-@app.api_route("/{full_path:path}", methods=["GET"])
+# Catch-all - MUST be last
+@app.get("/{full_path:path}")
 async def catch_all(full_path: str):
-    # Serve static files if they exist
+    # Never interfere with API routes
+    if full_path.startswith("api/") or full_path.startswith("api"):
+        raise HTTPException(status_code=404, detail="Not found")
+    
+    # Try static file
     file_path = frontend_path / full_path
     if file_path.exists() and file_path.is_file():
-        # Add cache-busting headers for images
         if str(file_path).endswith(('.png', '.jpg', '.jpeg', '.gif')):
-            return FileResponse(
-                str(file_path),
-                headers={"Cache-Control": "public, max-age=3600"}
-            )
+            return FileResponse(str(file_path), headers={"Cache-Control": "public, max-age=3600"})
         return FileResponse(str(file_path))
     
-    # Otherwise serve index.html for SPA routing
+    # SPA fallback
     index_path = frontend_path / "index.html"
     if index_path.exists():
-        return FileResponse(
-            str(index_path), 
-            media_type="text/html",
-            headers={"Cache-Control": "no-cache, no-store, must-revalidate"}
-        )
+        return FileResponse(str(index_path), media_type="text/html")
     raise HTTPException(status_code=404, detail="Not found")
 
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8000))
-    print(f"\n{'='*50}")
-    print(f"🚀 Starting Portfolio API Server")
-    print(f"📍 Running on: http://localhost:{port}")
-    print(f"📚 API Docs: http://localhost:{port}/docs")
-    print(f"🔍 ReDoc: http://localhost:{port}/redoc")
-    print(f"{'='*50}\n")
-    
-    uvicorn.run(
-        app,
-        host="0.0.0.0",
-        port=port,
-        reload=os.getenv("ENVIRONMENT") == "development"
-    )
+    print(f"\n🚀 Starting on port {port}")
+    uvicorn.run(app, host="0.0.0.0", port=port, reload=os.getenv("ENVIRONMENT") == "development")
